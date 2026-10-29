@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ob-Gyne Ward Work Prototype v1.0</title>
+    <!-- Google Fonts: Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #F8FAFC;
+            color: #0F172A;
+        }
+        /* Clinical Navy Palette Variables */
+        :root {
+            --navy-deep: #0A192F;
+            --navy-card: #1E293B;
+            --teal-primary: #0D9488;
+            --accent-red: #E11D48;
+        }
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col bg-slate-50 text-slate-900">
+
+    <!-- Top App Bar -->
+    <header class="bg-[#0A192F] text-white shadow-md sticky top-0 z-30 px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <div class="bg-teal-600 p-2 rounded-lg text-white">
+                <i class="fa-solid fa-notes-medical"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">Ob-Gyne Ward Work</h1>
+                <p class="text-xs text-teal-300">Mobile-First Prototype v1.0</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="openHandoverModal()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center space-x-1">
+                <i class="fa-solid fa-file-lines"></i>
+                <span class="hidden sm:inline">Handover</span>
+            </button>
+            <button onclick="toggleDarkMode()" class="text-slate-300 hover:text-white p-1">
+                <i class="fa-solid fa-moon" id="dark-mode-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container (SPA Views) -->
+    <main class="flex-1 overflow-y-auto pb-24 px-3 sm:px-6 py-4 max-w-4xl mx-auto w-full">
+
+        <!-- VIEW 1: OVERVIEW -->
+        <section id="view-overview" class="space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-[#0A192F] flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-pie text-teal-600"></i>
+                    <span>Overview Dashboard</span>
+                </h2>
+                <span id="current-date-time" class="text-xs text-slate-500"></span>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-teal-600">
+                    <p class="text-xs text-slate-500 font-medium">Total Patients</p>
+                    <p id="stat-total-patients" class="text-2xl font-bold text-slate-800">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
+                    <p class="text-xs text-slate-500 font-medium">Pending Tasks</p>
+                    <p id="stat-pending-tasks" class="text-2xl font-bold text-amber-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+                    <p class="text-xs text-slate-500 font-medium">Completed Tasks</p>
+                    <p id="stat-completed-tasks" class="text-2xl font-bold text-emerald-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-rose-500">
+                    <p class="text-xs text-slate-500 font-medium">Overdue Tasks</p>
+                    <p id="stat-overdue-tasks" class="text-2xl font-bold text-rose-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-orange-500">
+                    <p class="text-xs text-slate-500 font-medium">Urgent / Critical</p>
+                    <p id="stat-urgent-critical" class="text-2xl font-bold text-orange-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500 flex flex-col justify-center">
+                    <button onclick="switchTab('patients')" class="text-xs font-semibold text-blue-600 hover:underline text-left">
+                        <i class="fa-solid fa-hospital-user"></i> Manage Patients &rarr;
+                    </button>
+                    <button onclick="switchTab('tasks')" class="text-xs font-semibold text-teal-600 hover:underline text-left mt-1">
+                        <i class="fa-solid fa-list-check"></i> View All Tasks &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Urgent / Critical Tasks Quick View -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1.5"></i> งานเร่งด่วน / วิกฤตค้างอยู่</span>
+                    <span id="urgent-count-badge" class="bg-rose-100 text-rose-700 text-xs px-2 py-0.5 rounded-full">0</span>
+                </h3>
+                <div id="overview-urgent-list" class="space-y-2">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Beds with Pending Tasks -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <h3 class="font-bold text-slate-800 text-sm mb-3">
+                    <i class="fa-solid fa-bed text-teal-600 mr-1.5"></i> เตียงที่มีงานค้าง
+                </h3>
+                <div id="overview-beds-list" class="space-y-2">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: PATIENTS -->
+        <section id="view-patients" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-[#0A192F] flex items-center space-x-2">
+                    <i class="fa-solid fa-hospital-user text-teal-600"></i>
+                    <span>Patients Management</span>
+                </h2>
+                <button onclick="openPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white text-sm px-3.5 py-2 rounded-xl font-medium shadow-sm transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Add Patient</span>
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="fa-solid fa-search"></i>
+                </span>
+                <input type="text" id="patient-search-input" oninput="renderPatientsList()" placeholder="ค้นหาด้วย Bed number หรือ HN หรือ ชื่อ..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            </div>
+
+            <!-- Patients List -->
+            <div id="patients-container" class="space-y-3">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+        <!-- VIEW 3: ALL TASKS -->
+        <section id="view-tasks" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-[#0A192F] flex items-center space-x-2">
+                    <i class="fa-solid fa-list-check text-teal-600"></i>
+                    <span>All Tasks</span>
+                </h2>
+                <button onclick="openTaskModal()" class="bg-teal-600 hover:bg-teal-700 text-white text-sm px-3.5 py-2 rounded-xl font-medium shadow-sm transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Task</span>
+                </button>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                <div class="flex flex-wrap gap-1.5" id="task-filter-chips">
+                    <button onclick="setTaskFilter('all')" class="filter-chip px-3 py-1 rounded-lg text-xs font-medium bg-teal-600 text-white transition">All</button>
+                    <button onclick="setTaskFilter('pending')" class="filter-chip px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Pending</button>
+                    <button onclick="setTaskFilter('completed')" class="filter-chip px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Completed</button>
+                    <button onclick="setTaskFilter('overdue')" class="filter-chip px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Overdue</button>
+                    <button onclick="setTaskFilter('urgent')" class="filter-chip px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Urgent</button>
+                    <button onclick="setTaskFilter('critical')" class="filter-chip px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Critical</button>
+                </div>
+                <div class="flex space-x-2">
+                    <select id="task-category-filter" onchange="renderTasksList()" class="w-1/2 p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs">
+                        <option value="">ทุกหมวดหมู่ (Category)</option>
+                    </select>
+                    <select id="task-bed-filter" onchange="renderTasksList()" class="w-1/2 p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs">
+                        <option value="">ทุกเตียง (All Beds)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tasks Container -->
+            <div id="all-tasks-container" class="space-y-2.5">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+        <!-- VIEW 4: SETTINGS -->
+        <section id="view-settings" class="hidden space-y-4">
+            <h2 class="text-xl font-bold text-[#0A192F] flex items-center space-x-2">
+                <i class="fa-solid fa-gear text-teal-600"></i>
+                <span>Settings & Data Management</span>
+            </h2>
+
+            <!-- Storage & Backup Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-3">
+                <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-database text-teal-600 mr-1.5"></i> Local Storage & Backup</h3>
+                <p class="text-xs text-slate-500">ข้อมูลทั้งหมดถูกจัดเก็บไว้ใน Browser LocalStorage ของอุปกรณ์นี้ (Schema Version 1.0) ไม่มีการส่งข้อมูลขึ้น Cloud ภายนอก</p>
+                
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <button onclick="exportDataJSON()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Export JSON</span>
+                    </button>
+                    <label class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition cursor-pointer flex items-center space-x-1.5">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>Import JSON</span>
+                        <input type="file" id="import-file-input" accept=".json" onchange="importDataJSON(event)" class="hidden">
+                    </label>
+                    <button onclick="loadDemoData()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Load Demo Data</span>
+                    </button>
+                    <button onclick="clearDemoDataOnly()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs px-3.5 py-2 rounded-xl font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-eraser"></i>
+                        <span>Clear Demo Data</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Privacy & Notice Card -->
+            <div class="bg-amber-50 rounded-xl border border-amber-200 p-4 space-y-2">
+                <h3 class="font-bold text-amber-800 text-sm flex items-center space-x-1.5">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Privacy & PDPA Notice</span>
+                </h3>
+                <p class="text-xs text-amber-900 leading-relaxed">
+                    ระบบนี้ออกแบบมาสำหรับใช้ข้อมูลจำลอง (Mock Data) ในการฝึกอบรมหรือช่วยบันทึกงานระหว่างเวรเท่านั้น ห้ามนำข้อมูลผู้ป่วยจริง (Real Patient Data) มาป้อนจนกว่าจะผ่านการตรวจสอบความปลอดภัยและได้รับอนุญาตอย่างเป็นทางการ LocalStorage ไม่มีระบบเข้ารหัสความปลอดภัยขั้นสูง ข้อมูลอาจสูญหายได้หากล้างประวัติเบราว์เซอร์
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (Mobile-First) -->
+    <nav class="bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-30 shadow-lg safe-area-bottom">
+        <div class="max-w-4xl mx-auto grid grid-cols-4 py-2">
+            <button onclick="switchTab('overview')" id="nav-overview" class="flex flex-col items-center justify-center text-teal-600 transition">
+                <i class="fa-solid fa-chart-pie text-lg mb-0.5"></i>
+                <span class="text-[11px] font-medium">Overview</span>
+            </button>
+            <button onclick="switchTab('patients')" id="nav-patients" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-hospital-user text-lg mb-0.5"></i>
+                <span class="text-[11px] font-medium">Patients</span>
+            </button>
+            <button onclick="switchTab('tasks')" id="nav-tasks" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
+                <span class="text-[11px] font-medium">Tasks</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-gear text-lg mb-0.5"></i>
+                <span class="text-[11px] font-medium">Settings</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Patient Detail / Management Modal -->
+    <div id="patient-detail-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-[#0A192F] text-white px-4 py-3 flex justify-between items-center">
+                <h3 id="modal-patient-title" class="font-bold text-base flex items-center space-x-2">
+                    <i class="fa-solid fa-user-injured text-teal-400"></i>
+                    <span>Patient Details</span>
+                </h3>
+                <button onclick="closePatientDetailModal()" class="text-slate-300 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-4 flex-1" id="patient-detail-content">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Patient Modal -->
+    <div id="patient-form-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-[#0A192F] text-white px-4 py-3 flex justify-between items-center">
+                <h3 id="patient-form-title" class="font-bold text-base">Add New Patient</h3>
+                <button onclick="closePatientFormModal()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="patient-form" onsubmit="savePatient(event)" class="p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+                <input type="hidden" id="patient-edit-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Bed Number *</label>
+                        <input type="text" id="p-bed" required class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">HN *</label>
+                        <input type="text" id="p-hn" required class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Full Name *</label>
+                    <input type="text" id="p-name" required class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Age (Years)</label>
+                        <input type="number" id="p-age" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Gravida / Para (G/P)</label>
+                        <input type="text" id="p-gp" placeholder="G2P1" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Diagnosis *</label>
+                    <input type="text" id="p-dx" required placeholder="e.g., Term pregnancy in labor" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Gestational Age (GA)</label>
+                        <input type="text" id="p-ga" placeholder="38+2 wks" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">EDD</label>
+                        <input type="date" id="p-edd" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Relevant Risk Factors</label>
+                    <input type="text" id="p-risks" placeholder="e.g., GDM, Previous CS" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Patient Status</label>
+                    <select id="p-status" class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="Active Labor">Active Labor</option>
+                        <option value="Latent Labor">Latent Labor</option>
+                        <option value="Antepartum Ward">Antepartum Ward</option>
+                        <option value="Postpartum">Postpartum</option>
+                        <option value="High Risk">High Risk</option>
+                    </select>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closePatientFormModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium">Save Patient</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div id="task-form-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-[#0A192F] text-white px-4 py-3 flex justify-between items-center">
+                <h3 id="task-form-title" class="font-bold text-base">Add New Task</h3>
+                <button onclick="closeTaskModal()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="task-form" onsubmit="saveTask(event)" class="p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+                <input type="hidden" id="task-edit-id">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Assign to Patient (Optional)</label>
+                    <select id="t-patient-id" class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="">-- General Task (Not bound to patient) --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Task Title *</label>
+                    <input type="text" id="t-title" required placeholder="e.g., Repeat CBC, Give oxytocin" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Category *</label>
+                        <select id="t-category" required class="w-full p-2 border border-slate-300 rounded-lg">
+                            <option value="Assessment">Assessment</option>
+                            <option value="Monitoring">Monitoring</option>
+                            <option value="Laboratory">Laboratory</option>
+                            <option value="Medication / Treatment">Medication / Treatment</option>
+                            <option value="Procedure">Procedure</option>
+                            <option value="Documentation">Documentation</option>
+                            <option value="Consultation">Consultation</option>
+                            <option value="Delivery preparation">Delivery preparation</option>
+                            <option value="Postpartum care">Postpartum care</option>
+                            <option value="Handover">Handover</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Priority *</label>
+                        <select id="t-priority" required class="w-full p-2 border border-slate-300 rounded-lg">
+                            <option value="Routine">Routine</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Due Date & Time *</label>
+                    <input type="datetime-local" id="t-duedate" required class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Description / Notes</label>
+                    <textarea id="t-desc" rows="2" class="w-full p-2 border border-slate-300 rounded-lg" placeholder="Additional details..."></textarea>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bishop Score Modal -->
+    <div id="bishop-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-[#0A192F] text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-base"><i class="fa-solid fa-calculator text-teal-400 mr-1.5"></i> Bishop Score Assessment</h3>
+                <button onclick="closeBishopModal()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="bishop-form" onsubmit="saveBishopScore(event)" class="p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+                <input type="hidden" id="bishop-patient-id">
+                
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">1. Cervical Dilatation (cm)</label>
+                    <select id="b-dilatation" required class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="">-- Select --</option>
+                        <option value="0">0 cm (0 pt)</option>
+                        <option value="1">1-2 cm (1 pt)</option>
+                        <option value="2">3-4 cm (2 pt)</option>
+                        <option value="3">5 cm or more (3 pt)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">2. Cervical Effacement (%)</label>
+                    <select id="b-effacement" required class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="">-- Select --</option>
+                        <option value="0">0 - 30% (0 pt)</option>
+                        <option value="1">40 - 50% (1 pt)</option>
+                        <option value="2">60 - 70% (2 pt)</option>
+                        <option value="3">80% or more (3 pt)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">3. Fetal Station</label>
+                    <select id="b-station" required class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="">-- Select --</option>
+                        <option value="0">-3 (0 pt)</option>
+                        <option value="1">-2 (1 pt)</option>
+                        <option value="2">-1, 0 (2 pt)</option>
+                        <option value="3">+1, +2 or lower (3 pt)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">4. Cervical Consistency</label>
+                    <select id="b-consistency" required class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="">-- Select --</option>
+                        <option value="0">Firm / Hard (0 pt)</option>
+                        <option value="1">Medium (1 pt)</option>
+                        <option value="2">Soft (2 pt)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">5. Cervical Position</label>
+                    <select id="b-position" required class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="">-- Select --</option>
+                        <option value="0">Posterior (0 pt)</option>
+                        <option value="1">Mid / Intermediate (1 pt)</option>
+                        <option value="2">Anterior (2 pt)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Assessor Name / Note</label>
+                    <input type="text" id="b-assessor" placeholder="e.g., Dr. Smith / Nurse Joy" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeBishopModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium">Calculate & Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Labour Progress Modal -->
+    <div id="labour-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-[#0A192F] text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-base"><i class="fa-solid fa-timeline text-teal-400 mr-1.5"></i> Labour Progress Assessment</h3>
+                <button onclick="closeLabourModal()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="labour-form" onsubmit="saveLabourProgress(event)" class="p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+                <input type="hidden" id="labour-patient-id">
+                
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Dilatation (cm)</label>
+                        <input type="text" id="l-dilatation" placeholder="e.g., 4 cm" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Effacement</label>
+                        <input type="text" id="l-effacement" placeholder="e.g., 80%" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Station</label>
+                        <input type="text" id="l-station" placeholder="e.g., 0" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Contraction Freq</label>
+                        <input type="text" id="l-cfreq" placeholder="e.g., 3 in 10 min" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Duration</label>
+                        <input type="text" id="l-cdur" placeholder="e.g., 40 sec" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Intensity</label>
+                        <input type="text" id="l-cint" placeholder="e.g., Moderate" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">FHR (bpm)</label>
+                        <input type="text" id="l-fhr" placeholder="e.g., 140 bpm" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">CTG Assessment</label>
+                        <input type="text" id="l-ctg" placeholder="e.g., Reassuring / Reactive" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Membrane Status</label>
+                        <select id="l-mem" class="w-full p-2 border border-slate-300 rounded-lg">
+                            <option value="Intact">Intact</option>
+                            <option value="Ruptured (ROM)">Ruptured (ROM)</option>
+                            <option value="Artificial (ARM)">Artificial (ARM)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">ROM Time</label>
+                        <input type="datetime-local" id="l-romtime" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Amniotic Fluid Characteristics</label>
+                    <input type="text" id="l-fluid" placeholder="e.g., Clear, Meconium-stained" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Maternal Vital Signs (BP, PR, Temp, RR)</label>
+                    <input type="text" id="l-vitals" placeholder="e.g., 120/80 mmHg, 80 /min, 37.0 C, 20 /min" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Clinical Note</label>
+                    <textarea id="l-note" rows="2" class="w-full p-2 border border-slate-300 rounded-lg" placeholder="Observations..."></textarea>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeLabourModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium">Save Timeline Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Handover Summary Modal -->
+    <div id="handover-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-[#0A192F] text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center space-x-2">
+                    <i class="fa-solid fa-file-lines text-teal-400"></i>
+                    <span>Handover Summary</span>
+                </h3>
+                <button onclick="closeHandoverModal()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+                <p class="text-slate-500">สรุปข้อมูลผู้ป่วย งานค้าง และงานเร่งด่วนสำหรับส่งเวร ตรวจสอบข้อมูลก่อนคัดลอก</p>
+                <textarea id="handover-text-area" readonly rows="12" class="w-full p-3 font-mono bg-slate-50 border border-slate-300 rounded-xl text-xs"></textarea>
+                <div class="flex justify-end space-x-2">
+                    <button onclick="closeHandoverModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium">Close</button>
+                    <button onclick="copyHandoverSummary()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium flex items-center space-x-1.5">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>Copy Summary</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- STORAGE & STATE MANAGEMENT ---
+        const STORAGE_KEY = 'obgyne_ward_data_v1';
+        let appData = {
+            version: '1.0',
+            patients: [],
+            tasks: [],
+            bishopAssessments: [],
+            labourAssessments: [],
+            auditLogs: []
+        };
+
+        // Initialize App
+        function initApp() {
+            loadFromLocalStorage();
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            renderOverview();
+            renderPatientsList();
+            renderTasksList();
+            populateDropdowns();
+        }
+
+        function loadFromLocalStorage() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    appData = JSON.parse(stored);
+                } catch (e) {
+                    console.error("Error parsing localStorage data", e);
+                }
+            } else {
+                // Default empty or load demo data prompt
+                saveToLocalStorage();
+            }
+        }
+
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) {
+                alert("LocalStorage error or storage full!");
+            }
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('current-date-time').innerText = now.toLocaleDateString('th-TH', options);
+        }
+
+        // --- NAVIGATION SPA ---
+        function switchTab(tabId) {
+            ['overview', 'patients', 'tasks', 'settings'].forEach(id => {
+                document.getElementById(`view-${id}`).classList.add('hidden');
+                document.getElementById(`nav-${id}`).classList.remove('text-teal-600');
+                document.getElementById(`nav-${id}`).classList.add('text-slate-400');
+            });
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).classList.remove('text-slate-400');
+            document.getElementById(`nav-${tabId}`).classList.add('text-teal-600');
+
+            if (tabId === 'overview') renderOverview();
+            if (tabId === 'patients') renderPatientsList();
+            if (tabId === 'tasks') renderTasksList();
+            window.scrollTo(0, 0);
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('dark-mode-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        // --- DEMO DATA ---
+        function loadDemoData() {
+            appData = {
+                version: '1.0',
+                patients: [
+                    { id: 'p1', bed: 'Bed 1', hn: '1234567', name: 'นางสาว สมหญิง ใจดี', age: 28, dx: 'Term pregnancy in active labor', gp: 'G1P0', ga: '39+1 wks', edd: '2026-05-10', risks: 'None', status: 'Active Labor', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+                    { id: 'p2', bed: 'Bed 2', hn: '7654321', name: 'นาง มารศรี มีสุข', age: 34, dx: 'GDM controlled with diet, 38 wks', gp: 'G2P1', ga: '38+0 wks', edd: '2026-05-18', risks: 'GDM, Previous CS', status: 'Antepartum Ward', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+                ],
+                tasks: [
+                    { id: 't1', patientId: 'p1', title: 'Evaluate Cervical Dilatation (VT)', category: 'Assessment', description: 'Check progress every 4 hours', priority: 'Urgent', dueDate: new Date(Date.now() + 3600000).toISOString().slice(0,16), status: 'Pending', createdAt: new Date().toISOString(), auditHistory: [] },
+                    { id: 't2', patientId: 'p1', title: 'Continuous FHR monitoring', category: 'Monitoring', description: 'Observe CTG tracing', priority: 'Critical', dueDate: new Date(Date.now() - 1800000).toISOString().slice(0,16), status: 'Pending', createdAt: new Date().toISOString(), auditHistory: [] },
+                    { id: 't3', patientId: 'p2', title: 'Blood sugar profile (FBS/2PP)', category: 'Laboratory', description: 'Send lab in morning', priority: 'Routine', dueDate: new Date(Date.now() + 7200000).toISOString().slice(0,16), status: 'Pending', createdAt: new Date().toISOString(), auditHistory: [] }
+                ],
+                bishopAssessments: [
+                    { id: 'b1', patientId: 'p1', dilatation: 2, effacement: 2, station: 1, consistency: 1, position: 1, totalScore: 7, assessmentTime: new Date().toISOString(), assessor: 'Dr. John' }
+                ],
+                labourAssessments: [
+                    { id: 'l1', patientId: 'p1', dilatation: '4 cm', effacement: '80%', station: '0', cfreq: '3 in 10 min', cdur: '40 sec', cint: 'Moderate', fhr: '140 bpm', ctg: 'Reassuring', mem: 'Ruptured (ROM)', romtime: new Date().toISOString(), fluid: 'Clear', vitals: '120/80 mmHg, 80 /min', note: 'Patient in active phase', time: new Date().toISOString() }
+                ],
+                auditLogs: []
+            };
+            saveToLocalStorage();
+            initApp();
+            alert('Loaded Demo Data successfully!');
+        }
+
+        function clearDemoDataOnly() {
+            if (confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่?')) {
+                appData = { version: '1.0', patients: [], tasks: [], bishopAssessments: [], labourAssessments: [], auditLogs: [] };
+                saveToLocalStorage();
+                initApp();
+                alert('Data cleared successfully.');
+            }
+        }
+
+        // --- OVERVIEW RENDER ---
+        function renderOverview() {
+            const totalPatients = appData.patients.length;
+            const pendingTasks = appData.tasks.filter(t => t.status === 'Pending');
+            const completedTasks = appData.tasks.filter(t => t.status === 'Completed');
+            
+            const now = new Date();
+            const overdueTasks = pendingTasks.filter(t => new Date(t.dueDate) < now);
+            const urgentCriticalTasks = pendingTasks.filter(t => t.priority === 'Urgent' || t.priority === 'Critical');
+
+            document.getElementById('stat-total-patients').innerText = totalPatients;
+            document.getElementById('stat-pending-tasks').innerText = pendingTasks.length;
+            document.getElementById('stat-completed-tasks').innerText = completedTasks.length;
+            document.getElementById('stat-overdue-tasks').innerText = overdueTasks.length;
+            document.getElementById('stat-urgent-critical').innerText = urgentCriticalTasks.length;
+            document.getElementById('urgent-count-badge').innerText = urgentCriticalTasks.length;
+
+            // Render urgent / critical list
+            const urgentListEl = document.getElementById('overview-urgent-list');
+            if (urgentCriticalTasks.length === 0) {
+                urgentListEl.innerHTML = `<p class="text-xs text-slate-400 italic">ไม่มีงานเร่งด่วนหรือวิกฤตค้างอยู่</p>`;
+            } else {
+                urgentListEl.innerHTML = urgentCriticalTasks.map(t => {
+                    const patient = appData.patients.find(p => p.id === t.patientId);
+                    const bedLabel = patient ? patient.bed : 'General';
+                    const isOverdue = new Date(t.dueDate) < now;
+                    return `
+                        <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-0.5 rounded font-bold text-[10px] ${t.priority === 'Critical' ? 'bg-rose-600 text-white' : 'bg-orange-500 text-white'}">${t.priority}</span>
+                                <div>
+                                    <p class="font-bold text-slate-800">${t.title} <span class="text-teal-700 font-normal">(${bedLabel})</span></p>
+                                    <p class="text-[11px] text-slate-500">Due: ${new Date(t.dueDate).toLocaleString('th-TH')} ${isOverdue ? '<span class="text-rose-600 font-bold">(Overdue)</span>' : ''}</p>
+                                </div>
+                            </div>
+                            <button onclick="toggleTaskStatus('${t.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-xs font-medium">
+                                <i class="fa-solid fa-check"></i> ทำเสร็จ
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Render beds with pending tasks
+            const bedsListEl = document.getElementById('overview-beds-list');
+            const bedsWithPending = {};
+            pendingTasks.forEach(t => {
+                if (t.patientId) {
+                    const p = appData.patients.find(x => x.id === t.patientId);
+                    if (p) {
+                        if (!bedsWithPending[p.bed]) bedsWithPending[p.bed] = [];
+                        bedsWithPending[p.bed].push(t);
+                    }
+                }
+            });
+
+            const bedKeys = Object.keys(bedsWithPending);
+            if (bedKeys.length === 0) {
+                bedsListEl.innerHTML = `<p class="text-xs text-slate-400 italic">ไม่มีเตียงที่มีงานค้าง</p>`;
+            } else {
+                bedsListEl.innerHTML = bedKeys.map(bed => `
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-teal-700">${bed}</span>
+                            <span class="text-slate-600 ml-2">มีงานค้าง ${bedsWithPending[bed].length} รายการ</span>
+                        </div>
+                        <button onclick="switchTab('patients')" class="text-teal-600 font-semibold hover:underline">ดูคนไข้ &rarr;</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // --- PATIENTS MANAGEMENT ---
+        function renderPatientsList() {
+            const query = document.getElementById('patient-search-input').value.toLowerCase();
+            const container = document.getElementById('patients-container');
+            
+            const filtered = appData.patients.filter(p => 
+                p.bed.toLowerCase().includes(query) || 
+                p.hn.toLowerCase().includes(query) || 
+                p.name.toLowerCase().includes(query) ||
+                p.dx.toLowerCase().includes(query)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-slate-400 text-xs">ไม่พบข้อมูลคนไข้</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(p => {
+                const pTasks = appData.tasks.filter(t => t.patientId === p.id && t.status === 'Pending');
+                return `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-2 text-xs">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="bg-[#0A192F] text-white font-bold px-2.5 py-1 rounded-lg text-xs">${p.bed}</span>
+                                    <span class="font-bold text-slate-800 text-sm">${p.name}</span>
+                                    <span class="text-slate-500">HN: ${p.hn}</span>
+                                </div>
+                                <p class="text-slate-600 mt-1 font-medium"><i class="fa-solid fa-stethoscope text-teal-600 mr-1"></i> ${p.dx}</p>
+                            </div>
+                            <span class="bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-full text-[11px] font-medium">${p.status}</span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2 rounded-lg text-slate-600">
+                            <div><strong class="text-slate-700">Age:</strong> ${p.age || '-'} yrs</div>
+                            <div><strong class="text-slate-700">G/P:</strong> ${p.gp || '-'}</div>
+                            <div><strong class="text-slate-700">GA:</strong> ${p.ga || '-'}</div>
+                            <div><strong class="text-slate-700">Pending Tasks:</strong> <span class="font-bold text-amber-600">${pTasks.length}</span></div>
+                        </div>
+                        <div class="flex justify-end space-x-2 pt-1 border-t border-slate-100">
+                            <button onclick="openPatientDetailModalContent('${p.id}')" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium">
+                                <i class="fa-solid fa-eye mr-1"></i> Details & Tasks
+                            </button>
+                            <button onclick="openPatientFormModal('${p.id}')" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium">
+                                <i class="fa-solid fa-pen mr-1"></i> Edit
+                            </button>
+                            <button onclick="deletePatient('${p.id}')" class="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg font-medium">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openPatientFormModal(patientId = null) {
+            document.getElementById('patient-form-modal').classList.remove('hidden');
+            if (patientId) {
+                document.getElementById('patient-form-title').innerText = 'Edit Patient';
+                const p = appData.patients.find(x => x.id === patientId);
+                document.getElementById('patient-edit-id').value = p.id;
+                document.getElementById('p-bed').value = p.bed;
+                document.getElementById('p-hn').value = p.hn;
+                document.getElementById('p-name').value = p.name;
+                document.getElementById('p-age').value = p.age;
+                document.getElementById('p-gp').value = p.gp;
+                document.getElementById('p-dx').value = p.dx;
+                document.getElementById('p-ga').value = p.ga;
+                document.getElementById('p-edd').value = p.edd;
+                document.getElementById('p-risks').value = p.risks;
+                document.getElementById('p-status').value = p.status;
+            } else {
+                document.getElementById('patient-form-title').innerText = 'Add New Patient';
+                document.getElementById('patient-form').reset();
+                document.getElementById('patient-edit-id').value = '';
+            }
+        }
+
+        function closePatientFormModal() {
+            document.getElementById('patient-form-modal').classList.add('hidden');
+        }
+
+        function savePatient(e) {
+            e.preventDefault();
+            const id = document.getElementById('patient-edit-id').value;
+            const patientData = {
+                id: id ? id : 'p_' + Date.now(),
+                bed: document.getElementById('p-bed').value,
+                hn: document.getElementById('p-hn').value,
+                name: document.getElementById('p-name').value,
+                age: document.getElementById('p-age').value,
+                gp: document.getElementById('p-gp').value,
+                dx: document.getElementById('p-dx').value,
+                ga: document.getElementById('p-ga').value,
+                edd: document.getElementById('p-edd').value,
+                risks: document.getElementById('p-risks').value,
+                status: document.getElementById('p-status').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (id) {
+                const idx = appData.patients.findIndex(x => x.id === id);
+                if (idx !== -1) {
+                    patientData.createdAt = appData.patients[idx].createdAt;
+                    appData.patients[idx] = patientData;
+                }
+            } else {
+                patientData.createdAt = new Date().toISOString();
+                appData.patients.push(patientData);
+            }
+
+            saveToLocalStorage();
+            closePatientFormModal();
+            renderPatientsList();
+            renderOverview();
+            populateDropdowns();
+        }
+
+        function deletePatient(id) {
+            if (confirm('ต้องการลบข้อมูลคนและงานที่เกี่ยวข้องหรือไม่?')) {
+                appData.patients = appData.patients.filter(p => p.id !== id);
+                appData.tasks = appData.tasks.filter(t => t.patientId !== id);
+                saveToLocalStorage();
+                renderPatientsList();
+                renderOverview();
+                populateDropdowns();
+            }
+        }
+
+        // --- PATIENT DETAIL MODAL & CLINICAL ASSESSMENTS ---
+        let currentDetailPatientId = null;
+
+        function openPatientDetailModalContent(patientId) {
+            currentDetailPatientId = patientId;
+            const p = appData.patients.find(x => x.id === patientId);
+            if (!p) return;
+
+            document.getElementById('modal-patient-title').innerHTML = `<i class="fa-solid fa-user-injured text-teal-400"></i> <span>${p.bed}: ${p.name} (HN: ${p.hn})</span>`;
+            
+            const pTasks = appData.tasks.filter(t => t.patientId === p.id);
+            const pBishop = appData.bishopAssessments.filter(b => b.patientId === p.id).sort((a,b) => new Date(b.assessmentTime) - new Date(a.assessmentTime));
+            const pLabour = appData.labourAssessments.filter(l => l.patientId === p.id).sort((a,b) => new Date(b.time) - new Date(a.time));
+
+            const container = document.getElementById('patient-detail-content');
+            container.innerHTML = `
+                <!-- Basic Info -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 text-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><strong class="text-slate-700">Diagnosis:</strong> ${p.dx}</div>
+                        <div><strong class="text-slate-700">Status:</strong> ${p.status}</div>
+                        <div><strong class="text-slate-700">Age:</strong> ${p.age || '-'} yrs | <strong class="text-slate-700">G/P:</strong> ${p.gp || '-'}</div>
+                        <div><strong class="text-slate-700">GA:</strong> ${p.ga || '-'} | <strong class="text-slate-700">EDD:</strong> ${p.edd || '-'}</div>
+                    </div>
+                    <div><strong class="text-slate-700">Risks:</strong> <span class="text-rose-600 font-medium">${p.risks || 'None'}</span></div>
+                    <div class="text-[11px] text-slate-400 pt-1">Last Updated: ${new Date(p.updatedAt).toLocaleString('th-TH')}</div>
+                </div>
+
+                <!-- Action Buttons for Clinical & Tasks -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="openBishopModalForPatient('${p.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg font-medium text-xs">
+                        <i class="fa-solid fa-calculator mr-1"></i> Add Bishop Score
+                    </button>
+                    <button onclick="openLabourModalForPatient('${p.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-medium text-xs">
+                        <i class="fa-solid fa-timeline mr-1"></i> Add Labour Progress
+                    </button>
+                    <button onclick="openTaskModalForPatient('${p.id}')" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-medium text-xs">
+                        <i class="fa-solid fa-plus mr-1"></i> Add Task for Patient
+                    </button>
+                </div>
+
+                <!-- Patient Tasks -->
+                <div>
+                    <h4 class="font-bold text-slate-800 text-xs mb-2">Patient Tasks (${pTasks.length})</h4>
+                    <div class="space-y-1.5">
+                        ${pTasks.length === 0 ? '<p class="text-slate-400 text-xs italic">ไม่มีงานสำหรับคนไข้รายนี้</p>' : pTasks.map(t => `
+                            <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center text-xs">
+                                <div>
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="font-bold ${t.status === 'Completed' ? 'text-emerald-600 line-through' : 'text-slate-800'}">${t.title}</span>
+                                        <span class="px-1.5 py-0.2 rounded text-[10px] ${t.priority === 'Critical' ? 'bg-rose-600 text-white' : t.priority === 'Urgent' ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-700'}">${t.priority}</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">Due: ${new Date(t.dueDate).toLocaleString('th-TH')} | Status: <strong>${t.status}</strong></p>
+                                </div>
+                                <div class="flex space-x-1">
+                                    <button onclick="toggleTaskStatus('${t.id}')" class="px-2 py-1 bg-${t.status === 'Completed' ? 'amber' : 'emerald'}-600 text-white rounded text-[11px]">
+                                        ${t.status === 'Completed' ? 'Reopen' : 'Complete'}
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Bishop Scores History -->
+                <div>
+                    <h4 class="font-bold text-slate-800 text-xs mb-2">Bishop Score History (${pBishop.length})</h4>
+                    <div class="space-y-1.5">
+                        ${pBishop.length === 0 ? '<p class="text-slate-400 text-xs italic">ยังไม่มีการประเมิน Bishop Score</p>' : pBishop.map(b => `
+                            <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs flex justify-between items-center">
+                                <div>
+                                    <p class="font-bold text-teal-700">Total Score: ${b.totalScore} / 13</p>
+                                    <p class="text-[11px] text-slate-600">Dilatation: ${b.dilatation} | Effacement: ${b.effacement} | Station: ${b.station} | Consist: ${b.consistency} | Pos: ${b.position}</p>
+                                    <p class="text-[10px] text-slate-400">${new Date(b.assessmentTime).toLocaleString('th-TH')} (${b.assessor || 'N/A'})</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Labour Progress Timeline -->
+                <div>
+                    <h4 class="font-bold text-slate-800 text-xs mb-2">Labour Progress Timeline (${pLabour.length})</h4>
+                    <div class="space-y-2 border-l-2 border-teal-500 pl-3 ml-1">
+                        ${pLabour.length === 0 ? '<p class="text-slate-400 text-xs italic">ยังไม่มีข้อมูล Labour Progress</p>' : pLabour.map(l => `
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs space-y-1 relative">
+                                <div class="flex justify-between font-semibold text-slate-700">
+                                    <span>Dil: ${l.dilatation || '-'} | Eff: ${l.effacement || '-'} | Station: ${l.station || '-'}</span>
+                                    <span class="text-teal-600 text-[11px]">${new Date(l.time).toLocaleString('th-TH')}</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-1 text-[11px] text-slate-600">
+                                    <div><strong>Contraction:</strong> ${l.cfreq || '-'} (${l.cdur || '-'}, ${l.cint || '-'})</div>
+                                    <div><strong>FHR / CTG:</strong> ${l.fhr || '-'} / ${l.ctg || '-'}</div>
+                                    <div><strong>Membrane:</strong> ${l.mem || '-'} (${l.fluid || '-'})</div>
+                                    <div><strong>Vitals:</strong> ${l.vitals || '-'}</div>
+                                </div>
+                                ${l.note ? `<p class="text-[11px] text-slate-500 italic mt-1">Note: ${l.note}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('patient-detail-modal').classList.remove('hidden');
+        }
+
+        function closePatientDetailModal() {
+            document.getElementById('patient-detail-modal').classList.add('hidden');
+            renderPatientsList();
+            renderOverview();
+        }
+
+        // --- BISHOP SCORE LOGIC ---
+        function openBishopModalForPatient(patientId) {
+            document.getElementById('bishop-patient-id').value = patientId;
+            document.getElementById('bishop-form').reset();
+            document.getElementById('bishop-modal').classList.remove('hidden');
+        }
+
+        function closeBishopModal() {
+            document.getElementById('bishop-modal').classList.add('hidden');
+        }
+
+        function saveBishopScore(e) {
+            e.preventDefault();
+            const patientId = document.getElementById('bishop-patient-id').value;
+            const dilatation = parseInt(document.getElementById('b-dilatation').value);
+            const effacement = parseInt(document.getElementById('b-effacement').value);
+            const station = parseInt(document.getElementById('b-station').value);
+            const consistency = parseInt(document.getElementById('b-consistency').value);
+            const position = parseInt(document.getElementById('b-position').value);
+            const assessor = document.getElementById('b-assessor').value;
+
+            if (isNaN(dilatation) || isNaN(effacement) || isNaN(station) || isNaN(consistency) || isNaN(position)) {
+                alert('กรุณากรอกข้อมูล Bishop Score ให้ครบถ้วน');
+                return;
+            }
+
+            const totalScore = dilatation + effacement + station + consistency + position;
+
+            const assessment = {
+                id: 'b_' + Date.now(),
+                patientId,
+                dilatation,
+                effacement,
+                station,
+                consistency,
+                position,
+                totalScore,
+                assessmentTime: new Date().toISOString(),
+                assessor
+            };
+
+            appData.bishopAssessments.push(assessment);
+            saveToLocalStorage();
+            closeBishopModal();
+            openPatientDetailModalContent(patientId);
+        }
+
+        // --- LABOUR PROGRESS LOGIC ---
+        function openLabourModalForPatient(patientId) {
+            document.getElementById('labour-patient-id').value = patientId;
+            document.getElementById('labour-form').reset();
+            document.getElementById('labour-modal').classList.remove('hidden');
+        }
+
+        function closeLabourModal() {
+            document.getElementById('labour-modal').classList.add('hidden');
+        }
+
+        function saveLabourProgress(e) {
+            e.preventDefault();
+            const patientId = document.getElementById('labour-patient-id').value;
+            const record = {
+                id: 'l_' + Date.now(),
+                patientId,
+                dilatation: document.getElementById('l-dilatation').value,
+                effacement: document.getElementById('l-effacement').value,
+                station: document.getElementById('l-station').value,
+                cfreq: document.getElementById('l-cfreq').value,
+                cdur: document.getElementById('l-cdur').value,
+                cint: document.getElementById('l-cint').value,
+                fhr: document.getElementById('l-fhr').value,
+                ctg: document.getElementById('l-ctg').value,
+                mem: document.getElementById('l-mem').value,
+                romtime: document.getElementById('l-romtime').value,
+                fluid: document.getElementById('l-fluid').value,
+                vitals: document.getElementById('l-vitals').value,
+                note: document.getElementById('l-note').value,
+                time: new Date().toISOString()
+            };
+
+            appData.labourAssessments.push(record);
+            saveToLocalStorage();
+            closeLabourModal();
+            openPatientDetailModalContent(patientId);
+        }
+
+        // --- TASK MANAGEMENT ---
+        let currentTaskFilter = 'all';
+
+        function setTaskFilter(filter) {
+            currentTaskFilter = filter;
+            document.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.className = 'filter-chip px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+            });
+            event.target.className = 'filter-chip px-3 py-1 rounded-lg text-xs font-medium bg-teal-600 text-white transition';
+            renderTasksList();
+        }
+
+        function renderTasksList() {
+            const container = document.getElementById('all-tasks-container');
+            const categoryFilter = document.getElementById('task-category-filter').value;
+            const bedFilter = document.getElementById('task-bed-filter').value;
+            
+            const now = new Date();
+
+            let tasks = [...appData.tasks];
+
+            // Apply chip filter
+            if (currentTaskFilter === 'pending') tasks = tasks.filter(t => t.status === 'Pending');
+            if (currentTaskFilter === 'completed') tasks = tasks.filter(t => t.status === 'Completed');
+            if (currentTaskFilter === 'overdue') tasks = tasks.filter(t => t.status === 'Pending' && new Date(t.dueDate) < now);
+            if (currentTaskFilter === 'urgent') tasks = tasks.filter(t => t.priority === 'Urgent');
+            if (currentTaskFilter === 'critical') tasks = tasks.filter(t => t.priority === 'Critical');
+
+            // Apply category filter
+            if (categoryFilter) tasks = tasks.filter(t => t.category === categoryFilter);
+
+            // Apply bed filter
+            if (bedFilter) {
+                tasks = tasks.filter(t => {
+                    if (!t.patientId && bedFilter === 'general') return true;
+                    const p = appData.patients.find(x => x.id === t.patientId);
+                    return p && p.bed === bedFilter;
+                });
+            }
+
+            // Sorting: Critical/Urgent first, then Due time
+            const priorityWeight = { 'Critical': 3, 'Urgent': 2, 'Routine': 1 };
+            tasks.sort((a, b) => {
+                if (a.status !== b.status) return a.status === 'Pending' ? -1 : 1;
+                if (priorityWeight[b.priority] !== priorityWeight[a.priority]) {
+                    return priorityWeight[b.priority] - priorityWeight[a.priority];
+                }
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-slate-400 text-xs">ไม่พบรายการงาน</div>`;
+                return;
+            }
+
+            container.innerHTML = tasks.map(t => {
+                const patient = appData.patients.find(p => p.id === t.patientId);
+                const bedLabel = patient ? patient.bed : 'General Task';
+                const isOverdue = t.status === 'Pending' && new Date(t.dueDate) < now;
+
+                return `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3.5 flex items-center justify-between text-xs">
+                        <div class="flex items-start space-x-3">
+                            <button onclick="toggleTaskStatus('${t.id}')" class="mt-0.5 text-lg ${t.status === 'Completed' ? 'text-emerald-600' : 'text-slate-300 hover:text-teal-600'}">
+                                <i class="fa-solid ${t.status === 'Completed' ? 'fa-circle-check' : 'fa-circle'}"></i>
+                            </button>
+                            <div class="space-y-0.5">
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold ${t.status === 'Completed' ? 'line-through text-slate-400' : 'text-slate-800'} text-sm">${t.title}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.priority === 'Critical' ? 'bg-rose-600 text-white' : t.priority === 'Urgent' ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-700'}">${t.priority}</span>
+                                    <span class="bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded text-[10px]">${bedLabel}</span>
+                                </div>
+                                <p class="text-slate-500 text-[11px]"><i class="fa-solid fa-tag text-teal-600 mr-1"></i> ${t.category} | Due: ${new Date(t.dueDate).toLocaleString('th-TH')} ${isOverdue ? '<span class="text-rose-600 font-bold">(Overdue)</span>' : ''}</p>
+                                ${t.description ? `<p class="text-slate-600 italic text-[11px]">${t.description}</p>` : ''}
+                                ${t.completedAt ? `<p class="text-emerald-600 text-[10px]">Completed at: ${new Date(t.completedAt).toLocaleString('th-TH')}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            ${patient ? `<button onclick="openPatientDetailModalContent('${patient.id}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg" title="View Patient"><i class="fa-solid fa-user"></i></button>` : ''}
+                            <button onclick="deleteTask('${t.id}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg" title="Delete Task"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openTaskModal(patientId = null) {
+            document.getElementById('task-form-modal').classList.remove('hidden');
+            document.getElementById('task-form').reset();
+            document.getElementById('task-edit-id').value = '';
+            if (patientId) {
+                document.getElementById('t-patient-id').value = patientId;
+            }
+        }
+
+        function openTaskModalForPatient(patientId) {
+            openTaskModal(patientId);
+        }
+
+        function closeTaskModal() {
+            document.getElementById('task-form-modal').classList.add('hidden');
+        }
+
+        function saveTask(e) {
+            e.preventDefault();
+            const id = document.getElementById('task-edit-id').value;
+            const taskData = {
+                id: id ? id : 't_' + Date.now(),
+                patientId: document.getElementById('t-patient-id').value,
+                title: document.getElementById('t-title').value,
+                category: document.getElementById('t-category').value,
+                priority: document.getElementById('t-priority').value,
+                dueDate: document.getElementById('t-duedate').value,
+                description: document.getElementById('t-desc').value,
+                status: 'Pending',
+                createdAt: new Date().toISOString(),
+                auditHistory: []
+            };
+
+            appData.tasks.push(taskData);
+            saveToLocalStorage();
+            closeTaskModal();
+            renderTasksList();
+            renderOverview();
+            if (currentDetailPatientId) {
+                openPatientDetailModalContent(currentDetailPatientId);
+            }
+        }
+
+        function toggleTaskStatus(taskId) {
+            const task = appData.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            if (task.status === 'Pending') {
+                task.status = 'Completed';
+                task.completedAt = new Date().toISOString();
+            } else {
+                task.status = 'Pending';
+                task.completedAt = null;
+            }
+
+            task.updatedAt = new Date().toISOString();
+            saveToLocalStorage();
+            renderTasksList();
+            renderOverview();
+            if (currentDetailPatientId) {
+                openPatientDetailModalContent(currentDetailPatientId);
+            }
+        }
+
+        function deleteTask(id) {
+            if (confirm('ต้องการลบงานนี้หรือไม่?')) {
+                appData.tasks = appData.tasks.filter(t => t.id !== id);
+                saveToLocalStorage();
+                renderTasksList();
+                renderOverview();
+            }
+        }
+
+        // --- HANDOVER SUMMARY ---
+        function openHandoverModal() {
+            let summary = `=== OB-GYNE WARD HANDOVER SUMMARY ===\n`;
+            summary += `Generated: ${new Date().toLocaleString('th-TH')}\n\n`;
+            
+            summary += `--- PATIENTS LIST (${appData.patients.length}) ---\n`;
+            appData.patients.forEach(p => {
+                summary += `[${p.bed}] ${p.name} (HN: ${p.hn}) | Dx: ${p.dx} | Status: ${p.status}\n`;
+                const pTasks = appData.tasks.filter(t => t.patientId === p.id && t.status === 'Pending');
+                if (pTasks.length > 0) {
+                    summary += `  Pending Tasks:\n`;
+                    pTasks.forEach(t => {
+                        summary += `   - [${t.priority}] ${t.title} (Due: ${new Date(t.dueDate).toLocaleString('th-TH')})\n`;
+                    });
+                }
+                summary += `\n`;
+            });
+
+            const urgentCritical = appData.tasks.filter(t => t.status === 'Pending' && (t.priority === 'Urgent' || t.priority === 'Critical'));
+            summary += `--- URGENT / CRITICAL PENDING TASKS (${urgentCritical.length}) ---\n`;
+            urgentCritical.forEach(t => {
+                const p = appData.patients.find(x => x.id === t.patientId);
+                summary += `- [${t.priority}] ${t.title} (${p ? p.bed : 'General'}) Due: ${new Date(t.dueDate).toLocaleString('th-TH')}\n`;
+            });
+
+            document.getElementById('handover-text-area').value = summary;
+            document.getElementById('handover-modal').classList.remove('hidden');
+        }
+
+        function closeHandoverModal() {
+            document.getElementById('handover-modal').classList.add('hidden');
+        }
+
+        function copyHandoverSummary() {
+            const textarea = document.getElementById('handover-text-area');
+            textarea.select();
+            navigator.clipboard.writeText(textarea.value);
+            alert('คัดลอกข้อความสรุปส่งเวรเรียบร้อยแล้ว!');
+        }
+
+        // --- DROPDOWNS POPULATE ---
+        function populateDropdowns() {
+            const patientSelect = document.getElementById('t-patient-id');
+            patientSelect.innerHTML = `<option value="">-- General Task (Not bound to patient) --</option>` + 
+                appData.patients.map(p => `<option value="${p.id}">${p.bed}: ${p.name} (HN: ${p.hn})</option>`).join('');
+
+            const bedFilterSelect = document.getElementById('task-bed-filter');
+            const uniqueBeds = [...new Set(appData.patients.map(p => p.bed))];
+            bedFilterSelect.innerHTML = `<option value="">ทุกเตียง (All Beds)</option>` +
+                uniqueBeds.map(b => `<option value="${b}">${b}</option>`).join('');
+
+            const categoryFilterSelect = document.getElementById('task-category-filter');
+            const categories = [
+                'Assessment', 'Monitoring', 'Laboratory', 'Medication / Treatment', 
+                'Procedure', 'Documentation', 'Consultation', 'Delivery preparation', 
+                'Postpartum care', 'Handover', 'Other'
+            ];
+            categoryFilterSelect.innerHTML = `<option value="">ทุกหมวดหมู่ (Category)</option>` +
+                categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        // --- IMPORT / EXPORT JSON ---
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `obgyne_ward_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported && imported.version && Array.isArray(imported.patients)) {
+                        if (confirm('คุณต้องการเขียนทับข้อมูลปัจจุบันด้วยไฟล์สำรองนี้หรือไม่?')) {
+                            appData = imported;
+                            saveToLocalStorage();
+                            initApp();
+                            alert('Import ข้อมูลสำเร็จเรียบร้อยแล้ว!');
+                        }
+                    } else {
+                        alert('รูปแบบไฟล์ JSON ไม่ถูกต้องตามโครงสร้างระบบ');
+                    }
+                } catch (err) {
+                    alert('เกิดข้อผิดพลาดในการอ่านไฟล์ JSON');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Run Init on Load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
